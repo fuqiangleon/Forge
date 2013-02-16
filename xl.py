@@ -235,3 +235,4 @@ stand_query()
         
         
 #    read_stand_query()
+
