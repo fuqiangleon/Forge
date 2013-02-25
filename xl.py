@@ -42,13 +42,6 @@ report_table.write(1, 0, u'第一表')
 report_table.write(3, 0, u'单位')                        
 worksheet_stand_report.save('./report/Stand_report.xls')
 
-#Init Percent Query report
-if os.path.exists('./conf/template'):
-        pass
-else:
-        print 'No report template file found!'
-report_xls = xlrd.open_workbook('./conf/template', formatting_info=True)
-per_report_xls = copy(report_xls)
 
 #Init Custom Query Report
 if os.path.exists('./report/Custom_report.xls'):
@@ -90,6 +83,7 @@ def get_customrecords(xy):
 
     
 #Get cells physical location of Excel.
+
 def get_standcell_xy(xy):
 #    try:
         result = []
@@ -113,6 +107,7 @@ def get_standcell_xy(xy):
         return result
 #    except:
 #        print 'Get cells xy failed'
+
 def get_allcells_xy(xy):
 #    try:
         result = []
@@ -134,6 +129,7 @@ def get_allcells_xy(xy):
         return result
 #    except:
 #        print 'Get cells xy failed'        
+
 def get_customcells_xy(xy):
 #    try:
         result = []
@@ -157,78 +153,8 @@ def get_customcells_xy(xy):
 #        print 'Get cells xy failed'        
         
         
-##Load cells configure from cells.conf
-def PercentQuery(check_percent, xy):
-    f = file('./conf/cells.conf', 'r')
-    t = 0
-    while True:        
-        line = f.readline()
-        print t
-        if len(line) == 0:
-            break
-        if line.decode('gbk').split('=')[0].startswith(xy) != 1:
-#            print 'diff'
-            pass
-        else:
-#            print 'same'
-            record = get_allcells_xy(line)
-#            print record
-#Write data into report.xls                
-
-            for i in range(0, len(dep_list)):
-                data_source_before = location + dep_list[i] + '\\' + years[0] + '.xls'
-                data_source_after = location + dep_list[i] + '\\' + years[1] + '.xls'
-
-                worksheet_before = xlrd.open_workbook(data_source_before)
-                worksheet_after = xlrd.open_workbook(data_source_after)
-
-                table_before = worksheet_before.sheet_by_index(int(record[1]))
-                table_after = worksheet_after.sheet_by_index(int(record[1]))
-
-                a = table_before.cell(record[3], record[2]).value
-                b = table_after.cell(record[3], record[2]).value
-#                print a, b
-                if a == '':
-                    a = a.replace('', '0')
-                if b == '':
-                    b = b.replace('', '0')
-                
-                report_table = per_report_xls.get_sheet(record[1])
-                
-                if int(a) == 0:
-                    report_table.write(record[3], record[2], int(a))
-                elif (int(b) - int(a)) > 0:
-                    b_big_a = round(Decimal(int(b) - int(a)) / Decimal(a) * 100, 2)
-                    a_big_b = round(Decimal(int(a) - int(b)) / Decimal(a) * 100, 2)
-                
-                    if b_big_a >= check_percent:    
-                        report_table.write(record[3], record[2], b_big_a, style)
-                    else:
-                        report_table.write(record[3], record[2], b_big_a)
-                else:
-                    b_big_a = round(Decimal(int(b) - int(a)) / Decimal(a) * 100, 2)
-                    a_big_b = round(Decimal(int(a) - int(b)) / Decimal(a) * 100, 2)
-                
-                    if a_big_b >= check_percent:
-                        report_table.write(record[3], record[2], -1 * a_big_b, style)
-                    else:
-                        report_table.write(record[3], record[2], -1 * a_big_b)
-                        
-                per_report_xls.save('./report/' + dep_list[i] + '_Percent_report.xls')
-        t += 1            
-#            break
-            
-#                except:
-#                    print 'Some error occurred'
-                        
-    per_report_xls.save('Percent_report.xls')
-
-    f.close()    
-
-    
-
-
 #Load standard query configure from standcells.conf
+
 def StandQuery(*query_content):
      
 # Create a font to use with the style
@@ -378,6 +304,7 @@ def StandQuery(*query_content):
     f.close()
 #    except:
 #        print 'Stand Query failed'
+#Define Custom Query Model
 
 def CustomQuery(query_content):
 
@@ -403,9 +330,8 @@ def CustomQuery(query_content):
             worksheet_custom_report.save('./report/Custom_report.xls')
             write_custom(record_custom, len(custom_report.sheet_names()))
             break
-        table_exist += 1
-        
-        
+        table_exist += 1      
+                
 def write_custom(record_custom, table_index):        
     report_table_custom = worksheet_custom_report.get_sheet(table_index)
     report_table_custom.write(1, 1 + len(record_custom) / 2 + 1, u'合计')
@@ -457,3 +383,69 @@ def write_custom(record_custom, table_index):
             f.close()
 #            break            
         worksheet_custom_report.save('Custom_report.xls')
+
+def PercentQuery(check_percent, xy):
+
+    for i in range(0, len(dep_list)):
+                
+#        print location + dep_list[i].decode('gbk') + '\\' + years[0] + '.xls'
+        data_source_before = location + dep_list[i] + '\\' + years[0] + '.xls'
+        data_source_after = location + dep_list[i] + '\\' + years[1] + '.xls'
+
+        report_xls = xlrd.open_workbook(data_source_before, formatting_info=True)
+        per_report_xls = copy(report_xls)
+        
+        worksheet_before = xlrd.open_workbook(data_source_before)
+        worksheet_after = xlrd.open_workbook(data_source_after)
+        
+        f = file('./conf/cells.conf', 'r')
+        while True:
+            pass
+            line = f.readline()
+            if len(line) == 0:
+                break
+            if line.decode('gbk').split('=')[0].startswith(xy) != 1:
+    #            print 'diff'
+                pass
+            else:
+    #            print 'same'
+                record = get_allcells_xy(line)
+#                print record
+
+                table_before = worksheet_before.sheet_by_index(int(record[1]))
+                table_after = worksheet_after.sheet_by_index(int(record[1]))
+        
+                a = table_before.cell(record[3], record[2]).value
+                b = table_after.cell(record[3], record[2]).value
+        #                print a, b
+                if a == '':
+                    a = a.replace('', '0')
+                if b == '':
+                    b = b.replace('', '0')
+#                print a, b, int(b) - int(a)
+                report_table = per_report_xls.get_sheet(record[1])
+                
+                if int(a) == 0:
+                    report_table.write(record[3], record[2], int(a))
+                    per_report_xls.save('./report/' + dep_list[i] + '_Percent_report.xls')
+                elif (int(b) - int(a)) > 0:
+                    b_big_a = round(Decimal(int(b) - int(a)) / Decimal(a) * 100, 2)
+                    a_big_b = round(Decimal(int(a) - int(b)) / Decimal(a) * 100, 2)
+                
+                    if b_big_a >= check_percent:    
+                        report_table.write(record[3], record[2], b_big_a, style)
+                        per_report_xls.save('./report/' + dep_list[i] + '_Percent_report.xls')
+                    else:
+                        report_table.write(record[3], record[2], b_big_a)
+                        per_report_xls.save('./report/' + dep_list[i] + '_Percent_report.xls')
+                else:
+                    b_big_a = round(Decimal(int(b) - int(a)) / Decimal(a) * 100, 2)
+                    a_big_b = round(Decimal(int(a) - int(b)) / Decimal(a) * 100, 2)
+                
+                    if a_big_b >= check_percent:
+                        report_table.write(record[3], record[2], -1 * a_big_b, style)
+                        per_report_xls.save('./report/' + dep_list[i] + '_Percent_report.xls')
+                    else:
+                        report_table.write(record[3], record[2], -1 * a_big_b)
+                        per_report_xls.save('./report/' + dep_list[i] + '_Percent_report.xls')
+        f.close()

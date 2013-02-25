@@ -316,23 +316,23 @@ class PercentQuery(MainPanel):
                 self.list_all.Append(line.split('.')[0].decode('gbk'))
                
     def PerQuery(self, event):
-        try:
-            percent_value = int(self.percent_value.GetValue())
-            self.gauge = wx.Gauge(self, -1, len(self.list_all.GetSelections()), (0, 315), (785, 20))
-            for v in range(0, len(self.list_all.GetSelections())):
-                print 'v=', v
-                v = 0
-                xl.PercentQuery(percent_value, self.list_selected.GetString(v))
-                self.gauge.SetValue(v + 1)
-            self.gauge.SetValue(len(self.list_all.GetSelections() * 10))        
-            time.sleep(1)
-            dlg_over = wx.MessageDialog(self, u'查询成功完成', '', wx.OK)
-            dlg_over.ShowModal()
-            self.gauge.SetValue(0)
-        except:
-            dlg_warning = wx.MessageDialog(self, u'比例数值必须为整数！', '输入错误！', wx.OK)
-            dlg_warning.ShowModal()
-            self.gauge.SetValue(0)
+#        try:
+        percent_value = int(self.percent_value.GetValue())
+#            self.gauge = wx.Gauge(self, -1, len(self.list_all.GetSelections()), (0, 315), (785, 20))
+#            for v in range(0, len(self.list_all.GetSelections())):
+#                print 'v=', v
+        v = 0
+        xl.PercentQuery(percent_value, self.list_selected.GetString(v))
+#                self.gauge.SetValue(v + 1)
+#            self.gauge.SetValue(len(self.list_all.GetSelections() * 10))        
+#            time.sleep(1)
+#            dlg_over = wx.MessageDialog(self, u'查询成功完成', '', wx.OK)
+#            dlg_over.ShowModal()
+#            self.gauge.SetValue(0)
+#        except:
+#            dlg_warning = wx.MessageDialog(self, u'比例数值必须为整数！', '输入错误！', wx.OK)
+#            dlg_warning.ShowModal()
+#            self.gauge.SetValue(0)
 #                    
 
 class Frame(wx.Frame):
