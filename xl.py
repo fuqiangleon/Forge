@@ -415,7 +415,7 @@ def PercentQuery(v, check_percent, xy):
         data_source_before = location + dep_list[i] + '//' + years[0] + '.xls'
         data_source_after = location + dep_list[i] + '//' + years[1] + '.xls'
         if v == 0:
-            report_xls = xlrd.open_workbook(data_source_before, formatting_info=True)
+            report_xls = xlrd.open_workbook(data_source_after, formatting_info=True)
             per_report_xls = copy(report_xls)
         else:
             report_xls = xlrd.open_workbook('./report/' + dep_list[i] + '_Percent_report.xls', formatting_info=True)
