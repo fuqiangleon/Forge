@@ -48,10 +48,33 @@ if os.path.exists('./report/Custom_report.xls'):
     os.remove('./report/Custom_report.xls')
 worksheet_custom_report = xlwt.Workbook(encoding='gbk')
 worksheet_custom_report.add_sheet(u'默认表', cell_overwrite_ok=True)
-#report_table = worksheet_custom_report.get_sheet(0)
-#report_table.write(1, 0, u'')
-#report_table.write(3, 0, u'')                        
 worksheet_custom_report.save('./report/Custom_report.xls')
+
+
+#Init index of cells.conf
+
+index = {}
+f = file('./conf/cells.conf', 'r')
+#t = len(f.readlines())
+i = 0
+#f.readline(100)
+first = f.readline().split('.')
+index[first[0].decode('gbk')] = 0
+
+while True:    
+    record = f.readline()
+#    print record
+    if len(record) == 0:
+        break
+    else:
+        if index.has_key(record.split('.')[0].decode('gbk')):
+#            print i, 'same', record.decode('gbk')
+            i += 1 
+        else:
+#            print i, 'diff', record.decode('gbk')
+            index[record.split('.')[0].decode('gbk')] = i + 1
+            i += 1    
+f.close
 
 #Get_customquery cells
 def get_customrecords(xy):
@@ -384,29 +407,33 @@ def write_custom(record_custom, table_index):
 #            break            
         worksheet_custom_report.save('Custom_report.xls')
 
-def PercentQuery(check_percent, xy):
-
+def PercentQuery(v, check_percent, xy):
+    
     for i in range(0, len(dep_list)):
-                
+        t = 0
 #        print location + dep_list[i].decode('gbk') + '\\' + years[0] + '.xls'
-        data_source_before = location + dep_list[i] + '\\' + years[0] + '.xls'
-        data_source_after = location + dep_list[i] + '\\' + years[1] + '.xls'
-
-        report_xls = xlrd.open_workbook(data_source_before, formatting_info=True)
-        per_report_xls = copy(report_xls)
-        
+        data_source_before = location + dep_list[i] + '//' + years[0] + '.xls'
+        data_source_after = location + dep_list[i] + '//' + years[1] + '.xls'
+        if v == 0:
+            report_xls = xlrd.open_workbook(data_source_before, formatting_info=True)
+            per_report_xls = copy(report_xls)
+        else:
+            report_xls = xlrd.open_workbook('./report/' + dep_list[i] + '_Percent_report.xls', formatting_info=True)
+            per_report_xls = copy(report_xls)
         worksheet_before = xlrd.open_workbook(data_source_before)
         worksheet_after = xlrd.open_workbook(data_source_after)
         
         f = file('./conf/cells.conf', 'r')
-        while True:
-            pass
-            line = f.readline()
+#        while False:
+        for line in f.readlines()[index[xy]:]:
+#            print t
+#            line = f.readline()
             if len(line) == 0:
                 break
+#            print line.decode('gbk').split('=')[0], xy
             if line.decode('gbk').split('=')[0].startswith(xy) != 1:
     #            print 'diff'
-                pass
+                break
             else:
     #            print 'same'
                 record = get_allcells_xy(line)
@@ -417,20 +444,28 @@ def PercentQuery(check_percent, xy):
         
                 a = table_before.cell(record[3], record[2]).value
                 b = table_after.cell(record[3], record[2]).value
-        #                print a, b
+#                print a, b
                 if a == '':
                     a = a.replace('', '0')
+                elif a == '-':
+                    a = a.replace('-', '0')
                 if b == '':
                     b = b.replace('', '0')
+                elif b == '-':
+                    b = b.replace('-', '0')
+                
 #                print a, b, int(b) - int(a)
                 report_table = per_report_xls.get_sheet(record[1])
                 
                 if int(a) == 0:
-                    report_table.write(record[3], record[2], int(a))
-                    per_report_xls.save('./report/' + dep_list[i] + '_Percent_report.xls')
+                    if int(b) != 0:
+                        report_table.write(record[3], record[2], 100, style)
+                        per_report_xls.save('./report/' + dep_list[i] + '_Percent_report.xls')
+                    else:
+                        report_table.write(record[3], record[2], 0)
+                        per_report_xls.save('./report/' + dep_list[i] + '_Percent_report.xls')
                 elif (int(b) - int(a)) > 0:
                     b_big_a = round(Decimal(int(b) - int(a)) / Decimal(a) * 100, 2)
-                    a_big_b = round(Decimal(int(a) - int(b)) / Decimal(a) * 100, 2)
                 
                     if b_big_a >= check_percent:    
                         report_table.write(record[3], record[2], b_big_a, style)
@@ -438,8 +473,7 @@ def PercentQuery(check_percent, xy):
                     else:
                         report_table.write(record[3], record[2], b_big_a)
                         per_report_xls.save('./report/' + dep_list[i] + '_Percent_report.xls')
-                else:
-                    b_big_a = round(Decimal(int(b) - int(a)) / Decimal(a) * 100, 2)
+                elif (int(b) - int(a)) < 0:
                     a_big_b = round(Decimal(int(a) - int(b)) / Decimal(a) * 100, 2)
                 
                     if a_big_b >= check_percent:
@@ -448,4 +482,8 @@ def PercentQuery(check_percent, xy):
                     else:
                         report_table.write(record[3], record[2], -1 * a_big_b)
                         per_report_xls.save('./report/' + dep_list[i] + '_Percent_report.xls')
+                else:
+                    report_table.write(record[3], record[2], 0)
+                    per_report_xls.save('./report/' + dep_list[i] + '_Percent_report.xls')
+            t += 1            
         f.close()

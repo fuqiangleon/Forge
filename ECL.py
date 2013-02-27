@@ -301,7 +301,9 @@ class PercentQuery(MainPanel):
         MainPanel.__init__(self, parent)
         
         self.percent_name = wx.StaticText(self, label=u'对比分析比例(%)', pos=(550, 20), size=(-1, 30))
-        self.percent_value = wx.TextCtrl(self, size=(65, -1), value='10', pos=(560, 50), style=wx.ALIGN_CENTER_HORIZONTAL)        
+#        self.percent_value = wx.TextCtrl(self, size=(65, -1), value='10', pos=(560, 50), style=wx.ALIGN_CENTER_HORIZONTAL)
+        self.slade = wx.Slider(self, -1, 10, 1, 100, pos=(550, 50), size=(100, -1), style=wx.SL_HORIZONTAL | wx.SL_AUTOTICKS | wx.SL_LABELS)   
+              
         self.Bind(wx.EVT_BUTTON, self.PerQuery, self.query_button)
         self.GetRecord()
             
@@ -316,23 +318,25 @@ class PercentQuery(MainPanel):
                 self.list_all.Append(line.split('.')[0].decode('gbk'))
                
     def PerQuery(self, event):
-#        try:
-        percent_value = int(self.percent_value.GetValue())
-#            self.gauge = wx.Gauge(self, -1, len(self.list_all.GetSelections()), (0, 315), (785, 20))
-#            for v in range(0, len(self.list_all.GetSelections())):
-#                print 'v=', v
-        v = 0
-        xl.PercentQuery(percent_value, self.list_selected.GetString(v))
-#                self.gauge.SetValue(v + 1)
-#            self.gauge.SetValue(len(self.list_all.GetSelections() * 10))        
-#            time.sleep(1)
-#            dlg_over = wx.MessageDialog(self, u'查询成功完成', '', wx.OK)
-#            dlg_over.ShowModal()
-#            self.gauge.SetValue(0)
-#        except:
-#            dlg_warning = wx.MessageDialog(self, u'比例数值必须为整数！', '输入错误！', wx.OK)
-#            dlg_warning.ShowModal()
-#            self.gauge.SetValue(0)
+        try:
+            percent_value = int(self.slade.GetValue())
+            print percent_value
+            self.gauge = wx.Gauge(self, -1, len(self.list_all.GetSelections()), (0, 315), (785, 20))
+            v = 0
+            for v in range(0, 100000):
+                print 'v=', v
+                
+                xl.PercentQuery(v, percent_value, self.list_selected.GetString(v))
+                self.gauge.SetValue(v + 1)
+            self.gauge.SetValue(len(self.list_all.GetSelections() * 10))        
+            time.sleep(1)
+            dlg_over = wx.MessageDialog(self, u'查询成功完成', '', wx.OK)
+            dlg_over.ShowModal()
+            self.gauge.SetValue(0)
+        except:
+            dlg_warning = wx.MessageDialog(self, u'查询成功完成！', '', wx.OK)
+            dlg_warning.ShowModal()
+            self.gauge.SetValue(0)
 #                    
 
 class Frame(wx.Frame):
@@ -397,7 +401,7 @@ class Frame(wx.Frame):
 
 if __name__ == '__main__':    
     app = wx.App(redirect=False)
-    frame = Frame(None, u'ECL数据对比分析系统 2.0')
+    frame = Frame(None, u'ECL数据对比分析  2.0')
     
     nb = wx.Notebook(frame)
     
@@ -422,18 +426,18 @@ if __name__ == '__main__':
     d2 = datetime.datetime(y, m, d)
     licence = ''
     if (d1 - d2).days > 0:
-#        f1 = file('./conf/licence', 'r')
-#        licence_content = f1.readline()
-#        for i in range(len(licence_content) - 1, -1, -1):
-#            licence += licence_content[i]
-#            
-#        if licence == cert_md5.hexdigest():
-#            print 'Licence available'        
-#            frame.Show(True)
-#        else:
-#            print 'Licence error'
-#            frame.Close()
-#        f1.close   
+        f1 = file('./conf/licence', 'r')
+        licence_content = f1.readline()
+        for i in range(len(licence_content) - 1, -1, -1):
+            licence += licence_content[i]
+            
+        if licence == cert_md5.hexdigest():
+            print 'Licence available'        
+            frame.Show(True)
+        else:
+            print 'Licence error'
+            frame.Close()
+        f1.close   
         
         frame.Show(True)
     else:
