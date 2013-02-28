@@ -11,10 +11,22 @@ from decimal import Decimal
 
 #xlrd.Book.encoding = "gbk"
 location = './/Data/'
+location_ws = './/Data2/'
+stand_cells_conf = './conf/standcells.conf'
+cell_cells_conf = './conf/cell_cells.conf'
+ws_cells_conf = './conf/ws_cells.conf'
+cell_custom_conf = './conf/cell_customquery.conf'
+ws_custom_conf = './conf/ws_customquery.conf'
+
 years = []
+years_ws = []
 dep_list = os.listdir(location)
 for year in os.listdir(location + '\\' + dep_list[0]):
     years.append(year[0:-4])
+
+dep_list_ws = os.listdir(location_ws)
+for year in os.listdir(location + '\\' + dep_list[0]):
+    years_ws.append(year[0:-4])
     
 # Create a font to use with the style
 style = xlwt.XFStyle()
@@ -44,37 +56,45 @@ worksheet_stand_report.save('./report/Stand_report.xls')
 
 
 #Init Custom Query Report
-if os.path.exists('./report/Custom_report.xls'):
-    os.remove('./report/Custom_report.xls')
-worksheet_custom_report = xlwt.Workbook(encoding='gbk')
-worksheet_custom_report.add_sheet(u'默认表', cell_overwrite_ok=True)
-worksheet_custom_report.save('./report/Custom_report.xls')
+if os.path.exists('./report/Cell_Custom_report.xls'):
+    os.remove('./report/Cell_Custom_report.xls')
+cell_custom_report = xlwt.Workbook(encoding='gbk')
+cell_custom_report.add_sheet(u'默认表', cell_overwrite_ok=True)
+cell_custom_report.save('./report/Cell_Custom_report.xls')
+
+#if os.path.exists('./report/WS_Custom_report.xls'):
+#    os.remove('./report/WS_Custom_report.xls')
+#ws_custom_report = xlwt.Workbook(encoding='gbk')
+#ws_custom_report.add_sheet(u'默认表', cell_overwrite_ok=True)
+#ws_custom_report.save('./report/WS_Custom_report.xls')
 
 
 #Init index of cells.conf
-
-index = {}
-f = file('./conf/cells.conf', 'r')
-#t = len(f.readlines())
-i = 0
-#f.readline(100)
-first = f.readline().split('.')
-index[first[0].decode('gbk')] = 0
-
-while True:    
-    record = f.readline()
-#    print record
-    if len(record) == 0:
-        break
-    else:
-        if index.has_key(record.split('.')[0].decode('gbk')):
-#            print i, 'same', record.decode('gbk')
-            i += 1 
+def index_init(filename):
+    index = {}
+    f = file(filename, 'r')
+    #t = len(f.readlines())
+    i = 0
+    #f.readline(100)
+    first = f.readline().split('.')
+    index[first[0].decode('gbk')] = 0
+    
+    while True:    
+        record = f.readline()
+    #    print record
+        if len(record) == 0:
+            break
         else:
-#            print i, 'diff', record.decode('gbk')
-            index[record.split('.')[0].decode('gbk')] = i + 1
-            i += 1    
-f.close
+            if index.has_key(record.split('.')[0].decode('gbk')):
+    #            print i, 'same', record.decode('gbk')
+                i += 1 
+            else:
+    #            print i, 'diff', record.decode('gbk')
+                index[record.split('.')[0].decode('gbk')] = i + 1
+                i += 1    
+    f.close
+    return index
+
 
 #Get_customquery cells
 def get_customrecords(xy):
@@ -190,7 +210,7 @@ def StandQuery(*query_content):
     
 
     for name_id in (query_content):
-        f = file('./conf/standcells.conf', 'r')
+        f = file(stand_cells_conf, 'r')
         length = 0
         while True:        
             line = f.readline()
@@ -329,7 +349,7 @@ def StandQuery(*query_content):
 #        print 'Stand Query failed'
 #Define Custom Query Model
 
-def CustomQuery(query_content):
+def CellCustomQuery(query_content):
 
 # Create a font to use with the style
     font0 = xlwt.Font()
@@ -341,22 +361,110 @@ def CustomQuery(query_content):
 
     record_name = get_customrecords(query_content)[0]
     record_custom = get_customrecords(query_content)[1:]
+#    print record_name, record_custom
     table_exist = 0
-    custom_report = xlrd.open_workbook('./report/Custom_report.xls', formatting_info=True)
+    custom_report = xlrd.open_workbook('./report/Cell_Custom_report.xls', formatting_info=True)
     for table_exist in range(0, len(custom_report.sheet_names())):
 #        print table_exist, record_name, custom_report.sheet_names()[table_exist]
         if custom_report.sheet_names()[table_exist] == record_name:
             write_custom(record_custom, table_exist)
             break
         elif table_exist == len(custom_report.sheet_names()) - 1:
-            worksheet_custom_report.add_sheet(record_name, cell_overwrite_ok=True)
-            worksheet_custom_report.save('./report/Custom_report.xls')
+            cell_custom_report.add_sheet(record_name, cell_overwrite_ok=True)
+            cell_custom_report.save('./report/Cell_Custom_report.xls')
             write_custom(record_custom, len(custom_report.sheet_names()))
             break
-        table_exist += 1      
+#        table_exist += 1      
+        
+        
+#
+def WSCustomQuery(v, xy, year, threshold):
+    
+    index = index_init(ws_cells_conf)
+    record_custom = get_customrecords(xy)[1:]
+    record_name = get_customrecords(xy)[0]
+#    print record_name.decode('utf-8')
+    for i in range(0, len(dep_list_ws)):
+    
+        datasource = location_ws + dep_list_ws[i].decode('gbk') + '//' + year + '.xls'
+        if v == 0:
+#            print dep_list_ws[i].decode('gbk')
+            ws_report_xls = xlrd.open_workbook(datasource, formatting_info=True)
+            ws_custom_xls = copy(ws_report_xls)
+        else:
+            ws_report_xls = xlrd.open_workbook('./report/' + dep_list_ws[i].decode('gbk') + '_' + record_name + '_WS_custom_report.xls', formatting_info=True)
+            ws_custom_xls = copy(ws_report_xls)
+            
+        for j in range(0, len(record_custom), 2):
+#            print j
+            f = file(ws_cells_conf, 'r')
+            
+            for line in f.readlines()[index[record_custom[j]]:]:
+                f1 = file(ws_cells_conf, 'r')
+                for k in f1.readlines()[index[ record_custom[len(record_custom) - 1]]:]:
+#                        print record_custom[len(record_custom) - 1] + '.' + line.split('=')[0].split('.')[1]
+                    
+                    if k.decode('gbk').startswith(record_custom[len(record_custom) - 1] + '.' + line.split('=')[0].split('.')[1]):
+                        record_result = get_allcells_xy(k)
+#                        print k.decode('gbk'), record_result
+                        break
+                    else:
+                        continue
+                f1.close()
+                                
+                if len(line) == 0:
+                    break                
+                
+                if line.decode('gbk').split('=')[0].startswith(record_custom[j]) != 1:                    
+#                    print 'diff'
+                    break
+                else:
+#                    print 'same'
+                    record = get_allcells_xy(line)                    
+#                    print record_custom[j], record                
+                    
+                    ws_worksheet = xlrd.open_workbook(datasource)
+                    table = ws_worksheet.sheet_by_index(record[1] + 1)
+                    b = table.cell(record[3], record[2]).value
+                    if b == '':
+                        b = b.replace('', '0')
+                    elif b == '-':
+                        b = b.replace('-', '0')
+#                    print b
+                    ws_report_table = ws_custom_xls.get_sheet(len(ws_worksheet.sheet_names()) - 1)
+#                    ws_report_table.get
+                    if j == 0:
+                        result = int(b)
+                        ws_report_table.write(record_result[3], record_result[2], result)
+                        ws_custom_xls.save('./report/' + dep_list_ws[i].decode('gbk') + '_' + record_name + '_WS_custom_report.xls')
+                    elif j < len(record_custom) :
+                        ws_result = xlrd.open_workbook('./report/' + dep_list_ws[i].decode('gbk') + '_' + record_name + '_WS_custom_report.xls')
+                        table_result = ws_result.sheet_by_index(len(ws_result.sheet_names()) - 1)
+                        c = table_result.cell(record_result[3], record_result[2]).value
+#                        print 'b-c:' , b, c
+                        if c == '':
+                            c = c.replace('', '0')
+                        elif b == '-':
+                            c = c.replace('-', '0')
+                        
+                        if record_custom[j - 1] == '+':
+                            
+                            result = int(b) + int(c)
+                        else:
+                    
+                            result = int(c) - int(b)
+                            
+                        if result > threshold:                            
+                            ws_report_table.write(record_result[3], record_result[2], result, style)
+                            ws_custom_xls.save('./report/' + dep_list_ws[i].decode('gbk') + '_' + record_name + '_WS_custom_report.xls')
+                        else:
+                            ws_report_table.write(record_result[3], record_result[2], result)
+                            ws_custom_xls.save('./report/' + dep_list_ws[i].decode('gbk') + '_' + record_name + '_WS_custom_report.xls')
+#                ws_custom_xls.save('./report/' + dep_list_ws[i].decode('gbk') + '_WS_custom_report.xls')
+        
                 
 def write_custom(record_custom, table_index):        
-    report_table_custom = worksheet_custom_report.get_sheet(table_index)
+    report_table_custom = cell_custom_report.get_sheet(table_index)
     report_table_custom.write(1, 1 + len(record_custom) / 2 + 1, u'合计')
 #    print record_custom
     for k in range(0, len(dep_list)):
@@ -365,7 +473,7 @@ def write_custom(record_custom, table_index):
         report_table_custom.write(2 + k, 0, dep_list[k])
         for i in range(0, len(record_custom) + 1, 2):
 #            print i
-            f = file('./conf/cells.conf', 'r')
+            f = file(cell_cells_conf, 'r')
             while True:                            
                 line = f.readline()
                 if len(line) == 0:
@@ -385,7 +493,7 @@ def write_custom(record_custom, table_index):
 #                    print b                    
                     report_table_custom.write(1, 1 + i / 2, record_custom[i])
                     report_table_custom.write(2 + k, 1 + i / 2, b)
-                    worksheet_custom_report.save('./report/Custom_report.xls')
+                    cell_custom_report.save('./report/Cell_Custom_report.xls')
                     if b == '':
                         b = b.replace('', '0')
 #                    print i
@@ -400,14 +508,17 @@ def write_custom(record_custom, table_index):
 #                            print b, record_custom[i - 1], result
                     
                     report_table_custom.write(2 + k, 1 + len(record_custom) / 2 + 1, result)
-                    worksheet_custom_report.save('./report/Custom_report.xls')
+                    cell_custom_report.save('./report/Cell_Custom_report.xls')
                     break                    
                     
             f.close()
 #            break            
-        worksheet_custom_report.save('Custom_report.xls')
+        cell_custom_report.save('./report/Cell_Custom_report.xls')
+
 
 def PercentQuery(v, check_percent, xy):
+    
+    index = index_init(cell_cells_conf)
     
     for i in range(0, len(dep_list)):
         t = 0
@@ -420,10 +531,11 @@ def PercentQuery(v, check_percent, xy):
         else:
             report_xls = xlrd.open_workbook('./report/' + dep_list[i] + '_Percent_report.xls', formatting_info=True)
             per_report_xls = copy(report_xls)
+            
         worksheet_before = xlrd.open_workbook(data_source_before)
         worksheet_after = xlrd.open_workbook(data_source_after)
         
-        f = file('./conf/cells.conf', 'r')
+        f = file(cell_cells_conf, 'r')
 #        while False:
         for line in f.readlines()[index[xy]:]:
 #            print t
@@ -456,7 +568,6 @@ def PercentQuery(v, check_percent, xy):
                 
 #                print a, b, int(b) - int(a)
                 report_table = per_report_xls.get_sheet(record[1])
-                
                 if int(a) == 0:
                     if int(b) != 0:
                         report_table.write(record[3], record[2], 100, style)
@@ -487,3 +598,7 @@ def PercentQuery(v, check_percent, xy):
                     per_report_xls.save('./report/' + dep_list[i] + '_Percent_report.xls')
             t += 1            
         f.close()
+
+
+
+

@@ -9,6 +9,10 @@ import hashlib
 import base64
 import datetime
 
+
+
+
+
 class MainPanel(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
@@ -80,7 +84,7 @@ class StandQuery(MainPanel):
         self.GetRecord()
     def GetRecord(self):
         self.list_all.Clear()
-        f = file('./conf/standcells.conf', 'r')
+        f = file(xl.stand_cells_conf, 'r')
         while True:        
             line = f.readline()                
             if len(line) == 0:
@@ -113,6 +117,371 @@ class StandQuery(MainPanel):
             
                         
 class CustomQuery(wx.Panel):
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent)
+
+        # create some sizers
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+        
+        grid = wx.GridBagSizer(hgap=6, vgap=6)
+        hSizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        self.name_label = wx.StaticText(self, label=u"名称", size=(-1, -1))
+        self.year_label = wx.StaticText(self, label=u"年份", size=(-1, -1))
+        self.table_label = wx.StaticText(self, label=u"表名")
+#        self.cell_label = wx.StaticText(self, label=u"单元名")
+        self.table_expr = wx.StaticText(self, label=u"公式")
+        self.table_all = wx.StaticText(self, label=u"所有记录")
+        self.table_selected = wx.StaticText(self, label=u"查询记录")
+        
+        self.name_box = wx.TextCtrl(self, size=(100, -1))
+        self.year_box = wx.Choice(self, size=(60, -1), choices=xl.years)
+        self.table_box = wx.TextCtrl(self, size=(60, -1))
+#        self.cell_box = wx.TextCtrl(self, size=(60, -1))
+        self.expr_box = wx.Choice(self, size=(35, -1), choices=['+', '-', ''])
+        
+        self.button_add = wx.Button(self, label=u'添加', size=(50, -1))
+        self.button_del = wx.Button(self, label=u'删除', size=(50, -1))
+        self.button_reset = wx.Button(self, label=u'重置', size=(50, -1))
+        self.button_save = wx.Button(self, label=u'保存', size=(50, -1))
+        
+        self.list_all = wx.ListBox(self, -1, size=(470, 130), choices='', style=wx.LB_SINGLE | wx.LB_HSCROLL)
+        self.list_query = wx.ListBox(self, -1, size=(470, 100), choices='', style=wx.LB_MULTIPLE | wx.LB_HSCROLL)
+        self.button_query = wx.Button(self, -1, size=(100, 50), label=u'查询', style=wx.ALIGN_CENTER_VERTICAL)
+        self.button_selected = wx.Button(self, -1, size=(-1, -1), label=u'↓↓', style=wx.ALIGN_CENTER_VERTICAL)
+        self.button_unselected = wx.Button(self, -1, size=(-1, -1), label=u'↑↑', style=wx.ALIGN_CENTER_VERTICAL)
+        
+        self.Bind(wx.EVT_BUTTON, self.Addrecord, self.button_add)
+        self.Bind(wx.EVT_BUTTON, self.Delrecord, self.button_del)
+        self.Bind(wx.EVT_BUTTON, self.Resetrecord, self.button_reset)
+        self.Bind(wx.EVT_BUTTON, self.Saverecord, self.button_save)
+        self.Bind(wx.EVT_BUTTON, self.Selected, self.button_selected)
+        self.Bind(wx.EVT_BUTTON, self.Unselected, self.button_unselected)
+        self.Bind(wx.EVT_BUTTON, self.Query, self.button_query)
+        
+        grid.Add(self.name_label, pos=(0, 1))
+        grid.Add(self.year_label, pos=(0, 3))
+        grid.Add(self.table_label, pos=(0, 5))
+#        grid.Add(self.cell_label, pos=(0, 7))
+        grid.Add(self.table_expr, pos=(0, 9))
+        
+        grid.Add(self.name_box, pos=(0, 2))
+        grid.Add(self.year_box, pos=(0, 4))
+        grid.Add(self.table_box, pos=(0, 6))
+#        grid.Add(self.cell_box, pos=(0, 8))
+        grid.Add(self.expr_box, pos=(0, 10))
+        
+        grid.Add(self.button_add, pos=(0, 11))
+        grid.Add(self.button_del, pos=(0, 12))
+        grid.Add(self.button_reset, pos=(0, 13))
+        grid.Add(self.button_save, pos=(0, 14))
+        
+        grid.Add(self.list_all, pos=(1, 2), span=(1, 10))
+        grid.Add(self.list_query, pos=(3, 2), span=(1, 10))
+        grid.Add(self.table_all, pos=(1, 1))
+        grid.Add(self.table_selected, pos=(3, 1))
+        
+        grid.Add(self.button_selected, pos=(2, 3), span=(1, 2), flag=wx.ALIGN_CENTER)
+        grid.Add(self.button_unselected, pos=(2, 6), span=(1, 2), flag=wx.ALIGN_CENTER)
+        
+        grid.Add(self.button_query, pos=(3, 12), span=(1, 2), flag=wx.ALIGN_CENTER)
+        
+        hSizer.Add(grid, 0, wx.ALL, 5)
+        mainSizer.Add(hSizer, 0, wx.ALL, 5)
+#        mainSizer.Add(self.list_query, 0, wx.LEFT)
+        self.SetSizerAndFit(mainSizer)
+        self.Initrecord()
+        
+    def Initrecord(self):
+        f = open(xl.cell_custom_conf, 'r')
+        while True:
+            line = f.readline()
+#            print line.decode('gbk')
+            if len(line) == 0:
+                break
+            else:
+                self.list_all.Append(line.decode('utf-8'))
+        f.close()
+        
+    def Addrecord(self, event):
+        if self.name_box.GetValue() == '':
+            dlg_over = wx.MessageDialog(self, u'名称不能为空', '')
+            result = dlg_over.ShowModal()
+        elif self.table_box.GetValue() == '':
+            dlg_over = wx.MessageDialog(self, u'表名不能为空', '')
+            result = dlg_over.ShowModal()
+        elif self.name_box.GetValue() == '':
+            dlg_over = wx.MessageDialog(self, u'单元名不能为空', '')
+            result = dlg_over.ShowModal()            
+        else:   
+            record = self.year_box.GetStringSelection() + '.' + self.table_box.GetValue() + self.expr_box.GetStringSelection()
+            if self.expr_box.GetStringSelection() == '':
+                dlg_over = wx.MessageDialog(self, u'确定是最后一个单元名吗？', '')
+                result = dlg_over.ShowModal()
+                if result == wx.ID_OK:
+    #                print record
+                    if self.list_all.GetStringSelection() != '':
+                        old = self.list_all.GetStringSelection()
+                        self.list_all.Delete(self.list_all.GetSelection())
+                        new = old + record
+                        self.list_all.Insert(new, self.list_all.GetSelection() + 1)
+                        
+                    else:
+                        new = self.name_box.GetValue() + ':' + record
+                        self.list_all.Insert(new, self.list_all.GetSelection() + 1)
+                else:
+                    pass       
+            else:        
+#                print record
+                if self.list_all.GetStringSelection() != '':
+                    old = self.list_all.GetStringSelection()
+                    self.list_all.Delete(self.list_all.GetSelection())
+                    new = old + record
+                    self.list_all.Insert(new, self.list_all.GetSelection() + 1)
+                else:
+                    new = self.name_box.GetValue() + ':' + record
+                    self.list_all.Insert(new, self.list_all.GetSelection() + 1)
+
+    def Saverecord(self, event):
+        v = 0
+        f = open(xl.cell_custom_conf, 'w')
+        try: 
+            while True:
+#                print 
+                f.write(self.list_all.GetString(v))
+                v += 1
+        except:
+            if v == 0:
+                dlg_warning = wx.MessageDialog(self, u'无可保存的记录', '错误！', wx.OK)
+                dlg_warning.ShowModal()
+            else:        
+                time.sleep(1)
+                dlg_over = wx.MessageDialog(self, u'保存完成', '', wx.OK)
+                dlg_over.ShowModal()
+
+        f.close()
+        
+        pass
+    def Delrecord(self, event):
+        pass
+    def Resetrecord(self, event):
+        pass
+    def Selected(self, event):
+        for v in self.list_all.GetSelections():
+            self.list_query.Append(self.list_all.GetString(v))
+        
+    def Unselected(self, event):
+        for v in self.list_query.GetSelections():
+            self.list_query.Delete(v)
+        
+    def Query(self, event):
+        v = 0        
+        
+        self.gauge = wx.Gauge(self, -1, len(self.list_query.GetSelections()), (0, 315), (785, 20))
+        try: 
+            while True:
+#                print self.list_query.GetString(v)
+                xl.WSCustomQuery(self.list_query.GetString(v))                
+                self.gauge.SetValue(v + 1)
+                v += 1
+#                print v
+        except:
+            self.gauge.SetValue(len(self.list_query.GetSelections()))          
+            
+            if v == 0:
+                dlg_warning = wx.MessageDialog(self, u'请选择要查询的记录', '选择错误！', wx.OK)
+                dlg_warning.ShowModal()
+            else:        
+                time.sleep(1)
+                dlg_over = wx.MessageDialog(self, u'查询成功完成', '', wx.OK)
+                dlg_over.ShowModal()
+                self.gauge.SetValue(0)            
+                self.gauge.Destroy()
+##        
+class WSCustomQuery(wx.Panel):
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent)
+
+        # create some sizers
+        mainSizer = wx.BoxSizer(wx.VERTICAL)
+        
+        grid = wx.GridBagSizer(hgap=6, vgap=6)
+        hSizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        self.name_label = wx.StaticText(self, label=u"名称", size=(-1, -1))
+        self.year_label = wx.StaticText(self, label=u"年份", size=(-1, -1))
+        self.table_label = wx.StaticText(self, label=u"表名")
+#        self.cell_label = wx.StaticText(self, label=u"单元名")
+        self.table_expr = wx.StaticText(self, label=u"公式")
+        self.table_all = wx.StaticText(self, label=u"所有记录")
+        self.table_selected = wx.StaticText(self, label=u"查询记录")
+        
+        self.name_box = wx.TextCtrl(self, size=(100, -1))
+        self.year_box = wx.Choice(self, size=(60, -1), choices=xl.years)
+        self.table_box = wx.TextCtrl(self, size=(60, -1))
+#        self.cell_box = wx.TextCtrl(self, size=(60, -1))
+        self.expr_box = wx.Choice(self, size=(35, -1), choices=['+', '-', ''])
+        
+        self.button_add = wx.Button(self, label=u'添加', size=(50, -1))
+        self.button_del = wx.Button(self, label=u'删除', size=(50, -1))
+        self.button_reset = wx.Button(self, label=u'重置', size=(50, -1))
+        self.button_save = wx.Button(self, label=u'保存', size=(50, -1))
+        
+        self.list_all = wx.ListBox(self, -1, size=(470, 130), choices='', style=wx.LB_SINGLE | wx.LB_HSCROLL)
+        self.list_query = wx.ListBox(self, -1, size=(470, 100), choices='', style=wx.LB_MULTIPLE | wx.LB_HSCROLL)
+        self.button_query = wx.Button(self, -1, size=(100, 50), label=u'查询', style=wx.ALIGN_CENTER_VERTICAL)
+        self.button_selected = wx.Button(self, -1, size=(-1, -1), label=u'↓↓', style=wx.ALIGN_CENTER_VERTICAL)
+        self.button_unselected = wx.Button(self, -1, size=(-1, -1), label=u'↑↑', style=wx.ALIGN_CENTER_VERTICAL)
+        
+        self.percent_name = wx.StaticText(self, label=u'对比分析阀值', pos=(610, 50), size=(-1, 30))
+        self.slade = wx.Slider(self, -1, 0, -100, 100, pos=(600, 80), size=(100, -1), style=wx.SL_HORIZONTAL | wx.SL_AUTOTICKS | wx.SL_LABELS)
+        
+        self.Bind(wx.EVT_BUTTON, self.Addrecord, self.button_add)
+        self.Bind(wx.EVT_BUTTON, self.Delrecord, self.button_del)
+        self.Bind(wx.EVT_BUTTON, self.Resetrecord, self.button_reset)
+        self.Bind(wx.EVT_BUTTON, self.Saverecord, self.button_save)
+        self.Bind(wx.EVT_BUTTON, self.Selected, self.button_selected)
+        self.Bind(wx.EVT_BUTTON, self.Unselected, self.button_unselected)
+        self.Bind(wx.EVT_BUTTON, self.Query, self.button_query)
+        
+        grid.Add(self.name_label, pos=(0, 1))
+        grid.Add(self.year_label, pos=(0, 3))
+        grid.Add(self.table_label, pos=(0, 5))
+#        grid.Add(self.cell_label, pos=(0, 7))
+        grid.Add(self.table_expr, pos=(0, 7))
+        
+        grid.Add(self.name_box, pos=(0, 2))
+        grid.Add(self.year_box, pos=(0, 4))
+        grid.Add(self.table_box, pos=(0, 6))
+#        grid.Add(self.cell_box, pos=(0, 8))
+        grid.Add(self.expr_box, pos=(0, 8))
+        
+        grid.Add(self.button_add, pos=(0, 9))
+        grid.Add(self.button_del, pos=(0, 10))
+        grid.Add(self.button_reset, pos=(0, 11))
+        grid.Add(self.button_save, pos=(0, 12))
+        
+        grid.Add(self.list_all, pos=(1, 2), span=(1, 10))
+        grid.Add(self.list_query, pos=(3, 2), span=(1, 10))
+        grid.Add(self.table_all, pos=(1, 1))
+        grid.Add(self.table_selected, pos=(3, 1))
+        
+        grid.Add(self.button_selected, pos=(2, 3), span=(1, 2), flag=wx.ALIGN_CENTER)
+        grid.Add(self.button_unselected, pos=(2, 6), span=(1, 2), flag=wx.ALIGN_CENTER)
+        
+        grid.Add(self.button_query, pos=(3, 12), span=(1, 2), flag=wx.ALIGN_CENTER)
+        
+        hSizer.Add(grid, 0, wx.ALL, 5)
+        mainSizer.Add(hSizer, 0, wx.ALL, 5)
+#        mainSizer.Add(self.list_query, 0, wx.LEFT)
+        self.SetSizerAndFit(mainSizer)
+        self.Initrecord()
+        
+    def Initrecord(self):
+        f = open(xl.ws_custom_conf, 'r')
+        while True:
+            line = f.readline()
+#            print line.decode('gbk')
+            if len(line) == 0:
+                break
+            else:
+                self.list_all.Append(line.decode('utf-8'))
+        f.close()
+        
+    def Addrecord(self, event):
+        if self.name_box.GetValue() == '':
+            dlg_over = wx.MessageDialog(self, u'名称不能为空', '')
+            result = dlg_over.ShowModal()
+        elif self.table_box.GetValue() == '':
+            dlg_over = wx.MessageDialog(self, u'表名不能为空', '')
+            result = dlg_over.ShowModal()            
+        else:   
+            record = self.table_box.GetValue() + self.expr_box.GetStringSelection()
+            if self.expr_box.GetStringSelection() == '':
+                dlg_over = wx.MessageDialog(self, u'确定是最后一个表名吗？', '')
+                result = dlg_over.ShowModal()
+                if result == wx.ID_OK:
+    #                print record
+                    if self.list_all.GetStringSelection() != '':
+                        old = self.list_all.GetStringSelection()
+                        self.list_all.Delete(self.list_all.GetSelection())
+                        new = old + record
+                        self.list_all.Insert(new, self.list_all.GetSelection() + 1)
+                        
+                    else:
+                        new = self.name_box.GetValue() + ':' + record
+                        self.list_all.Insert(new, self.list_all.GetSelection() + 1)
+                else:
+                    pass       
+            else:        
+#                print record
+                if self.list_all.GetStringSelection() != '':
+                    old = self.list_all.GetStringSelection()
+                    self.list_all.Delete(self.list_all.GetSelection())
+                    new = old + record
+                    self.list_all.Insert(new, self.list_all.GetSelection() + 1)
+                else:
+                    new = self.name_box.GetValue() + ':' + record
+                    self.list_all.Insert(new, self.list_all.GetSelection() + 1)
+
+    def Saverecord(self, event):
+        v = 0
+        f = open(xl.ws_custom_conf, 'w')
+        try: 
+            while True:
+#                print 
+                f.write(self.list_all.GetString(v))
+                v += 1
+        except:
+            if v == 0:
+                dlg_warning = wx.MessageDialog(self, u'无可保存的记录', '错误！', wx.OK)
+                dlg_warning.ShowModal()
+            else:        
+                time.sleep(1)
+                dlg_over = wx.MessageDialog(self, u'保存完成', '', wx.OK)
+                dlg_over.ShowModal()
+
+        f.close()
+        
+        pass
+    def Delrecord(self, event):
+        pass
+    def Resetrecord(self, event):
+        pass
+    def Selected(self, event):
+        for v in self.list_all.GetSelections():
+            self.list_query.Append(self.list_all.GetString(v))
+        
+    def Unselected(self, event):
+        for v in self.list_query.GetSelections():
+            self.list_query.Delete(v)
+        
+    def Query(self, event):
+        v = 0        
+#        xl.WSCustomQuery(v, self.list_query.GetString(v), '2012', self.slade.GetValue())
+        self.gauge = wx.Gauge(self, -1, len(self.list_query.GetSelections()), (0, 315), (785, 20))
+        try: 
+            while True:
+#                print self.list_query.GetString(v)
+                xl.WSCustomQuery(v, self.list_query.GetString(v), '2012', self.slade.GetValue())                
+                self.gauge.SetValue(v + 1)
+                v += 1
+#                print v
+        except:
+            self.gauge.SetValue(len(self.list_query.GetSelections()))          
+            
+            if v == 0:
+                dlg_warning = wx.MessageDialog(self, u'请选择要查询的记录', '选择错误！', wx.OK)
+                dlg_warning.ShowModal()
+            else:        
+                time.sleep(1)
+                dlg_over = wx.MessageDialog(self, u'查询成功完成', '', wx.OK)
+                dlg_over.ShowModal()
+                self.gauge.SetValue(0)            
+                self.gauge.Destroy()
+
+
+class CellCustomQuery(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
 
@@ -189,7 +558,7 @@ class CustomQuery(wx.Panel):
         self.Initrecord()
         
     def Initrecord(self):
-        f = open('./conf/customquery.conf', 'r')
+        f = open(xl.cell_custom_conf, 'r')
         while True:
             line = f.readline()
 #            print line.decode('gbk')
@@ -240,7 +609,7 @@ class CustomQuery(wx.Panel):
 
     def Saverecord(self, event):
         v = 0
-        f = open('./conf/customquery.conf', 'w')
+        f = open(xl.cell_custom_conf, 'w')
         try: 
             while True:
 #                print 
@@ -277,7 +646,7 @@ class CustomQuery(wx.Panel):
         try: 
             while True:
 #                print self.list_query.GetString(v)
-                xl.CustomQuery(self.list_query.GetString(v))                
+                xl.CellCustomQuery(self.list_query.GetString(v))                
                 self.gauge.SetValue(v + 1)
                 v += 1
 #                print v
@@ -309,7 +678,7 @@ class PercentQuery(MainPanel):
             
     def GetRecord(self):
         self.list_all.Clear()
-        f = file('./conf/cells.conf', 'r')
+        f = file(xl.cell_cells_conf, 'r')
         while True:        
             line = f.readline()                
             if len(line) == 0:
@@ -405,12 +774,13 @@ if __name__ == '__main__':
     
     nb = wx.Notebook(frame)
     
-    namelist = [u'标准查询', u'自定义查询', u'比例查询']
+    namelist = [u'标准查询', u'比例查询', u'自定义单元格查询', u'自定义工作簿查询']
         
     #for name in namelist:
     nb.AddPage(StandQuery(nb), namelist[0])
-    nb.AddPage(CustomQuery(nb), namelist[1])
-    nb.AddPage(PercentQuery(nb), namelist[2])
+    nb.AddPage(PercentQuery(nb), namelist[1])
+    nb.AddPage(CellCustomQuery(nb), namelist[2])
+    nb.AddPage(WSCustomQuery(nb), namelist[3])
     
     cert = platform.machine() + platform.node() + platform.platform() + platform.processor() + platform.release()
     cert_file = file('./conf/cert', 'w')
@@ -445,7 +815,3 @@ if __name__ == '__main__':
     
         
 app.MainLoop()
-
-
-    
-                    
