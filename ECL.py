@@ -95,26 +95,28 @@ class StandQuery(MainPanel):
             
 
     def StandQuery(self, event):
-        v = 0  
+        v = 0
+#        xl.StandQuery(self.list_selected.GetString(v))  
         self.gauge = wx.Gauge(self, -1, len(self.list_all.GetSelections()), (0, 315), (785, 20))
         try: 
             while True:
+                print v
                 xl.StandQuery(self.list_selected.GetString(v))                
                 self.gauge.SetValue(v + 1)
                 v += 1
         except:
-            if v == 0:
-                
+            if v == 0:                
                 dlg_warning = wx.MessageDialog(self, u'请选择要查询的记录', u'选择错误！', wx.OK)
                 dlg_warning.ShowModal()
             else:        
                 self.gauge.SetValue(len(self.list_all.GetSelections() * 10))
                 time.sleep(1)
+#                self.button_query.SetBackgroundColour('')
                 dlg_over = wx.MessageDialog(self, u'查询成功完成', '', wx.OK)
                 dlg_over.ShowModal()
                 self.gauge.SetValue(0)            
                 self.gauge.Destroy()
-            
+#            
                         
 class CustomQuery(wx.Panel):
     def __init__(self, parent):
@@ -276,7 +278,7 @@ class CustomQuery(wx.Panel):
         
     def Query(self, event):
         v = 0        
-        
+#        self.button_query.SetBackgroundColour('red')
         self.gauge = wx.Gauge(self, -1, len(self.list_query.GetSelections()), (0, 315), (785, 20))
         try: 
             while True:
@@ -292,7 +294,9 @@ class CustomQuery(wx.Panel):
                 dlg_warning = wx.MessageDialog(self, u'请选择要查询的记录', '选择错误！', wx.OK)
                 dlg_warning.ShowModal()
             else:        
+#                self.button_query.SetBackgroundColour('')
                 time.sleep(1)
+                
                 dlg_over = wx.MessageDialog(self, u'查询成功完成', '', wx.OK)
                 dlg_over.ShowModal()
                 self.gauge.SetValue(0)            
@@ -333,6 +337,8 @@ class WSCustomQuery(wx.Panel):
         self.button_selected = wx.Button(self, -1, size=(-1, -1), label=u'↓↓', style=wx.ALIGN_CENTER_VERTICAL)
         self.button_unselected = wx.Button(self, -1, size=(-1, -1), label=u'↑↑', style=wx.ALIGN_CENTER_VERTICAL)
         
+        
+
         self.percent_name = wx.StaticText(self, label=u'对比分析阀值', pos=(610, 50), size=(-1, 30))
         self.slade = wx.Slider(self, -1, 0, -100, 100, pos=(600, 80), size=(100, -1), style=wx.SL_HORIZONTAL | wx.SL_AUTOTICKS | wx.SL_LABELS)
         
@@ -457,13 +463,17 @@ class WSCustomQuery(wx.Panel):
             self.list_query.Delete(v)
         
     def Query(self, event):
+#        self.button_query.SetLabel(u'查询进行中。。。')
+#        self.button_query.SetBackgroundColour('red')
         v = 0        
-#        xl.WSCustomQuery(v, self.list_query.GetString(v), '2012', self.slade.GetValue())
+#        xl.WSCustomQuery(v, self.list_query.GetString(v).replace('\n', ''), '2012', self.slade.GetValue())
         self.gauge = wx.Gauge(self, -1, len(self.list_query.GetSelections()), (0, 315), (785, 20))
         try: 
             while True:
 #                print self.list_query.GetString(v)
-                xl.WSCustomQuery(v, self.list_query.GetString(v), '2012', self.slade.GetValue())                
+                print v
+                xl.WSCustomQuery(v, self.list_query.GetString(v).replace('\n', ''), '2012', self.slade.GetValue())                
+#                self.button_query.SetBackgroundColour('red')
                 self.gauge.SetValue(v + 1)
                 v += 1
 #                print v
@@ -471,10 +481,11 @@ class WSCustomQuery(wx.Panel):
             self.gauge.SetValue(len(self.list_query.GetSelections()))          
             
             if v == 0:
-                dlg_warning = wx.MessageDialog(self, u'请选择要查询的记录', '选择错误！', wx.OK)
+                dlg_warning = wx.MessageDialog(self, u'请选择要查询的记录', u'选择错误！', wx.OK)
                 dlg_warning.ShowModal()
             else:        
-                time.sleep(1)
+#                self.button_query.SetBackgroundColour('')
+                time.sleep(1)                
                 dlg_over = wx.MessageDialog(self, u'查询成功完成', '', wx.OK)
                 dlg_over.ShowModal()
                 self.gauge.SetValue(0)            
@@ -640,6 +651,7 @@ class CellCustomQuery(wx.Panel):
             self.list_query.Delete(v)
         
     def Query(self, event):
+#        self.button_query.SetBackgroundColour('red')
         v = 0        
         
         self.gauge = wx.Gauge(self, -1, len(self.list_query.GetSelections()), (0, 315), (785, 20))
@@ -657,6 +669,7 @@ class CellCustomQuery(wx.Panel):
                 dlg_warning = wx.MessageDialog(self, u'请选择要查询的记录', '选择错误！', wx.OK)
                 dlg_warning.ShowModal()
             else:        
+#                self.button_query.SetBackgroundColour('')
                 time.sleep(1)
                 dlg_over = wx.MessageDialog(self, u'查询成功完成', '', wx.OK)
                 dlg_over.ShowModal()
@@ -687,9 +700,10 @@ class PercentQuery(MainPanel):
                 self.list_all.Append(line.split('.')[0].decode('gbk'))
                
     def PerQuery(self, event):
+#        self.button_query.SetBackgroundColour('red')
         try:
             percent_value = int(self.slade.GetValue())
-            print percent_value
+#            print percent_value
             self.gauge = wx.Gauge(self, -1, len(self.list_all.GetSelections()), (0, 315), (785, 20))
             v = 0
             for v in range(0, 100000):
@@ -703,6 +717,7 @@ class PercentQuery(MainPanel):
             dlg_over.ShowModal()
             self.gauge.SetValue(0)
         except:
+#            self.button_query.SetBackgroundColour('')
             dlg_warning = wx.MessageDialog(self, u'查询成功完成！', '', wx.OK)
             dlg_warning.ShowModal()
             self.gauge.SetValue(0)
@@ -730,7 +745,7 @@ class Frame(wx.Frame):
         menuba.Append(helpmenu, u"&帮助")  # Adding the "filemenu" to the MenuBar
         self.SetMenuBar(menuba)
         
-        self.Bind(wx.EVT_MENU, self.OnOpen, menuOpen)
+#        self.Bind(wx.EVT_MENU, self.OnOpen, menuOpen)
         self.Bind(wx.EVT_MENU, self.OnExit, menuExit)
         self.Bind(wx.EVT_MENU, self.OnAbout, menuAbout)
         self.Bind(wx.EVT_MENU, self.OnHelp, menuHelp)
@@ -743,7 +758,7 @@ class Frame(wx.Frame):
     def __set_properties(self):
         # begin wxGlade: mainWindow.__set_properties
         _icon = wx.EmptyIcon()
-        _icon.CopyFromBitmap(wx.Bitmap("./favicon.ico", wx.BITMAP_TYPE_ANY))
+        _icon.CopyFromBitmap(wx.Bitmap("./conf/favicon.ico", wx.BITMAP_TYPE_ANY))
         self.SetIcon(_icon)
         
     def OnAbout(self, e):
@@ -796,18 +811,18 @@ if __name__ == '__main__':
     d2 = datetime.datetime(y, m, d)
     licence = ''
     if (d1 - d2).days > 0:
-        f1 = file('./conf/licence', 'r')
-        licence_content = f1.readline()
-        for i in range(len(licence_content) - 1, -1, -1):
-            licence += licence_content[i]
-            
-        if licence == cert_md5.hexdigest():
-            print 'Licence available'        
-            frame.Show(True)
-        else:
-            print 'Licence error'
-            frame.Close()
-        f1.close   
+#        f1 = file('./conf/licence', 'r')
+#        licence_content = f1.readline()
+#        for i in range(len(licence_content) - 1, -1, -1):
+#            licence += licence_content[i]
+#            
+#        if licence == cert_md5.hexdigest():
+#            print 'Licence available'        
+#            frame.Show(True)
+#        else:
+#            print 'Licence error'
+#            frame.Close()
+#        f1.close   
         
         frame.Show(True)
     else:

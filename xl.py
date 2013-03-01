@@ -21,8 +21,10 @@ ws_custom_conf = './conf/ws_customquery.conf'
 years = []
 years_ws = []
 dep_list = os.listdir(location)
+#print dep_list
 for year in os.listdir(location + '\\' + dep_list[0]):
     years.append(year[0:-4])
+
 
 dep_list_ws = os.listdir(location_ws)
 for year in os.listdir(location + '\\' + dep_list[0]):
@@ -381,13 +383,15 @@ def CellCustomQuery(query_content):
 def WSCustomQuery(v, xy, year, threshold):
     
     index = index_init(ws_cells_conf)
+
     record_custom = get_customrecords(xy)[1:]
+#    print record_custom.deco
     record_name = get_customrecords(xy)[0]
 #    print record_name.decode('utf-8')
     for i in range(0, len(dep_list_ws)):
     
         datasource = location_ws + dep_list_ws[i].decode('gbk') + '//' + year + '.xls'
-        if v == 0:
+        if i == 0:
 #            print dep_list_ws[i].decode('gbk')
             ws_report_xls = xlrd.open_workbook(datasource, formatting_info=True)
             ws_custom_xls = copy(ws_report_xls)
@@ -398,7 +402,8 @@ def WSCustomQuery(v, xy, year, threshold):
         for j in range(0, len(record_custom), 2):
 #            print j
             f = file(ws_cells_conf, 'r')
-            
+#            print index[record_custom[j]]
+#            print index[ record_custom[len(record_custom) - 1]]
             for line in f.readlines()[index[record_custom[j]]:]:
                 f1 = file(ws_cells_conf, 'r')
                 for k in f1.readlines()[index[ record_custom[len(record_custom) - 1]]:]:
