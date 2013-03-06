@@ -707,7 +707,7 @@ class PercentQuery(MainPanel):
             self.gauge = wx.Gauge(self, -1, len(self.list_all.GetSelections()), (0, 315), (785, 20))
             v = 0
             for v in range(0, 100000):
-                print 'v=', v
+#                print 'v=', v
                 
                 xl.PercentQuery(v, percent_value, self.list_selected.GetString(v))
                 self.gauge.SetValue(v + 1)

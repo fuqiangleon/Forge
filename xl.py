@@ -139,8 +139,11 @@ def get_standcell_xy(xy):
 #print phyical location of record    
         for lens in range(1, len(record) - 1):
             table_cell = record[lens].split('->')            
-            cell = table_cell[1].split(':')        
-            cell_x = ord(cell[0]) - 65
+            cell = table_cell[1].split(':')
+            if len(cell[0]) <= 1:        
+                cell_x = ord(cell[0]) - 65
+            else:
+                cell_x = ord(cell[0][-1]) + 26 - 65
             cell_y = cell[1]
             result.append(xy.split('.')[0])
             result.append(int(table_cell[0]) - 1)
@@ -163,7 +166,12 @@ def get_allcells_xy(xy):
         for lens in range(1, len(record)):
             table_cell = record[lens].split('->')            
             cell = table_cell[1].split(':')        
-            cell_x = ord(cell[0]) - 65
+#            cell_x = ord(cell[0]) - 65
+            if len(cell[0]) <= 1:        
+                cell_x = ord(cell[0]) - 65
+            else:
+                cell_x = ord(cell[0][-1]) + 26 - 65
+#            print cell_x
             cell_y = cell[1]
 #            print cell, cell_x, cell_y, int(table_cell[0]) - 1
             result.append(query_name)
@@ -185,7 +193,11 @@ def get_customcells_xy(xy):
         for lens in range(1, len(record)):
             table_cell = record[lens].split('->')            
             cell = table_cell[1].split(':')        
-            cell_x = ord(cell[0]) - 65
+#            cell_x = ord(cell[0]) - 65
+            if len(cell[0]) <= 1:        
+                cell_x = ord(cell[0]) - 65
+            else:
+                cell_x = ord(cell[0][-1]) + 26 - 65
             cell_y = cell[1]
 #            print cell, cell_x, cell_y, int(table_cell[0]) - 1
             result.append(query_name)
