@@ -10,9 +10,6 @@ import base64
 import datetime
 
 
-
-
-
 class MainPanel(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
@@ -732,7 +729,7 @@ class Frame(wx.Frame):
         filemenu = wx.Menu()
         helpmenu = wx.Menu()
         
-        menuOpen = filemenu.Append(wx.ID_OPEN, u"&导入配置", " Open a file to import me!")
+        #menuOpen = filemenu.Append(wx.ID_OPEN, u"&导入配置", " Open a file to import me!")
 #        filemenu.AppendSeparator()
         menuExit = filemenu.Append(wx.ID_EXIT, u"&退出", " Terminate the program")
         
@@ -807,7 +804,7 @@ if __name__ == '__main__':
     y = int(t.split(',')[0])
     m = int(t.split(',')[1])
     d = int(t.split(',')[2])
-    d1 = datetime.datetime(2013, 4, 1)
+    d1 = datetime.datetime(2014, 6, 1)
     d2 = datetime.datetime(y, m, d)
     licence = ''
     if (d1 - d2).days > 0:
