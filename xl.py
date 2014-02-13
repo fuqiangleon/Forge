@@ -617,5 +617,4 @@ def PercentQuery(v, check_percent, xy):
         f.close()
 
 
-
-
+#End
