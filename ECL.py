@@ -804,7 +804,7 @@ if __name__ == '__main__':
     y = int(t.split(',')[0])
     m = int(t.split(',')[1])
     d = int(t.split(',')[2])
-    d1 = datetime.datetime(2014, 6, 1)
+    d1 = datetime.datetime(2015, 6, 1)
     d2 = datetime.datetime(y, m, d)
     licence = ''
     if (d1 - d2).days > 0:
@@ -824,10 +824,7 @@ if __name__ == '__main__':
         frame.Show(True)
     else:
         frame.Close()
-    
-
-
-        
+            
 app.MainLoop()
 
 #End
