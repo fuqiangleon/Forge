@@ -12,6 +12,8 @@ import datetime
 
 class MainPanel(wx.Panel):
     def __init__(self, parent):
+        
+        #Fiexd the black area in Screen.pos=(600,0)
         wx.Panel.__init__(self, parent,pos=(600,0))
 
         grid = wx.GridBagSizer(hgap=0, vgap=0)
